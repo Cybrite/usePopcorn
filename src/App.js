@@ -1,4 +1,9 @@
 import { useEffect, useState } from "react";
+import { quantum } from "ldrs";
+
+quantum.register();
+
+// Default values shown
 
 const tempMovieData = [
   {
@@ -55,43 +60,72 @@ const KEY = "ef0cff14";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  // const query = "shinchan";
+  const [query, setQuery] = useState("iron man");
 
   useEffect(function () {
-    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-      .then((res) => res.json())
-      .then((data) => setMovies(data.Search));
+    async function fetchMovies() {
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+        );
+        if (!res.ok) throw new Error("Something went wrong");
+
+        const data = await res.json();
+        if (data.Response === "False") throw new Error("Movie not Found");
+
+        setMovies(data.Search);
+      } catch (error) {
+        console.error(error.message);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchMovies();
   }, []);
 
   return (
     <>
       <Navbar>
         <Logo />
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
       </Navbar>
 
       <Main>
         {/* components reuseability */}
         <Box>
-          <List movies={movies} />
+          {/* {isLoading ? <Loader /> : <List movies={movies} />} */}
+          {isLoading && <Loader />}
+          {!isLoading && !error && <List movies={movies} />}
+          {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
           <Summary watched={watched} />
           <WatchedList watched={watched} />
         </Box>
-
-        {/* we can also pass them as elements */}
-        {/* <Box element={<List movies={movies} />} />
-        <Box
-          element={
-            <>
-              <Summary watched={watched} />
-              <WatchedList watched={watched} />
-            </>
-          }
-        /> */}
       </Main>
     </>
+  );
+}
+
+function Loader() {
+  return (
+    <div className="loader">
+      <l-quantum size="45" speed="1.75" color="#6741d9"></l-quantum>
+    </div>
+  );
+}
+
+function ErrorMessage({ message }) {
+  return (
+    <p className="error">
+      <span>⛔</span> {message}
+    </p>
   );
 }
 
@@ -108,9 +142,7 @@ function Logo() {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
@@ -242,3 +274,14 @@ function WatchedListItem({ movie }) {
     </li>
   );
 }
+
+// {/* we can also pass them as elements */}
+// {/* <Box element={<List movies={movies} />} />
+// <Box
+//   element={
+//     <>
+//       <Summary watched={watched} />
+//       <WatchedList watched={watched} />
+//     </>
+//   }
+// /> */}

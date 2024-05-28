@@ -77,9 +77,11 @@ html {
 .loader {
   text-align: center;
   text-transform: uppercase;
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 4.8rem;
+  /* font-size: 2rem; */
+  /* font-weight: 600; */
+  margin: 5.8rem;
+  margin-bottom: 15rem;
+  align-self: center;
 }
 
 .error {
@@ -363,4 +365,3 @@ html {
   FONT SIZE SYSTEM (px)
   10 / 12 / 14 / 16 / 18 / 20 / 24 / 30 / 36 / 44 /52 / 62 / 74 / 86 / 98
   */
-
