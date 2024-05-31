@@ -96,13 +96,17 @@ export default function App() {
 
   useEffect(
     function () {
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
+
           if (!res.ok) throw new Error("Something went wrong");
 
           const data = await res.json();
@@ -111,7 +115,10 @@ export default function App() {
           setMovies(data.Search);
         } catch (error) {
           console.error(error.message);
-          setError(error.message);
+
+          if (error.name !== "AbortError") {
+            setError(error.message);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -124,6 +131,10 @@ export default function App() {
       }
 
       fetchMovies();
+
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
@@ -308,6 +319,22 @@ function SelectedMovie({ selectedId, onAdd, onClose, watchedMovie }) {
 
   useEffect(
     function () {
+      function Callback(e) {
+        if (e.code === "Escape") {
+          onClose();
+        }
+      }
+      document.addEventListener("keydown", Callback);
+
+      return function () {
+        document.removeEventListener("keydown", Callback);
+      };
+    },
+    [onClose]
+  );
+
+  useEffect(
+    function () {
       async function getMovieDetails() {
         setLoading(true);
         const res = await fetch(
@@ -323,10 +350,17 @@ function SelectedMovie({ selectedId, onAdd, onClose, watchedMovie }) {
     [selectedId]
   );
 
-  useEffect(function () {
-    if(!title) return;
-    document.title = `Movie | ${title}`;
-  }, [title]);
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = `Movie | ${title}`;
+
+      return function () {
+        document.title = "usePopcorn";
+      };
+    },
+    [title]
+  );
 
   return (
     <div className="details">
