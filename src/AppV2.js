@@ -14,11 +14,12 @@ export default function App() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
+  //saving
   const [watched, setWatched] = useState(function(){
     const storedValue = localStorage.getItem('watched')
     return JSON.parse(storedValue);
   });
-
+  //changing
   useEffect(
     function () {
       localStorage.setItem("watched", JSON.stringify(watched));
